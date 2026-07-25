@@ -1,0 +1,26 @@
+BAIXADOR DE VÍDEOS — GUIA RÁPIDO
+
+1. Dê dois cliques em "Abrir-Baixador.vbs".
+   Esse iniciador abre somente a interface gráfica, sem exibir o prompt
+   de comando.
+
+2. O sistema verificará automaticamente se yt-dlp e FFmpeg estão
+   instalados. Caso não estejam, escolha "Sim" para instalá-los.
+
+3. Se o Windows solicitar permissão durante a instalação, confirme.
+
+4. Se o aplicativo pedir para ser reiniciado, feche-o e abra novamente.
+
+5. Cole o link do YouTube, escolha Vídeo MP4 ou Áudio MP3, selecione
+   a pasta e clique em "Baixar".
+
+Observações:
+- O sistema baixa apenas um vídeo por vez; links de playlists não são processados.
+- Use-o somente para conteúdo que você tenha autorização para baixar.
+- O arquivo é salvo com o título do vídeo e seu identificador.
+- O arquivo "Abrir-Baixador.cmd" é mantido apenas por compatibilidade.
+
+CRÉDITOS
+
+Este sistema foi desenvolvido por Paulo Sant anna em 25/07/2026,
+com o apoio do Codex.
