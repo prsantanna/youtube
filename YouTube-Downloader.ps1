@@ -121,6 +121,27 @@ function Get-DownloadHelp {
     return 'O yt-dlp não conseguiu concluir a operação. Atualize o programa e tente novamente.'
 }
 
+function Update-YtDlp {
+    $statusLabel.Text = 'Atualizando o yt-dlp... Aguarde.'
+    $statusLabel.ForeColor = [System.Drawing.Color]::DarkOrange
+    $form.Refresh()
+
+    $updateText = (& yt-dlp --update 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -eq 0) {
+        return $true
+    }
+
+    if (Test-Program 'winget') {
+        $updateProcess = Start-Process -FilePath 'winget.exe' -ArgumentList @(
+            'upgrade', '--id', 'yt-dlp.yt-dlp', '--exact',
+            '--accept-package-agreements', '--accept-source-agreements', '--silent'
+        ) -Wait -PassThru
+        return ($updateProcess.ExitCode -eq 0)
+    }
+
+    return $false
+}
+
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Baixador de vídeos'
 $form.Size = New-Object System.Drawing.Size(650, 430)
@@ -291,6 +312,22 @@ $downloadButton.Add_Click({
     try {
         $downloadText = (& yt-dlp @arguments 2>&1 | Out-String).Trim()
         $downloadExitCode = $LASTEXITCODE
+
+        $shouldUpdate = $downloadExitCode -ne 0 -and (
+            $downloadText -match 'older than 90 days|latest version|update yt-dlp|HTTP Error 403'
+        )
+
+        if ($shouldUpdate) {
+            if (Update-YtDlp) {
+                $statusLabel.Text = 'Atualização concluída. Tentando o download novamente...'
+                $statusLabel.ForeColor = [System.Drawing.Color]::DimGray
+                $form.Refresh()
+                $downloadText = (& yt-dlp @arguments 2>&1 | Out-String).Trim()
+                $downloadExitCode = $LASTEXITCODE
+            } else {
+                $downloadText += "`nNão foi possível atualizar o yt-dlp automaticamente."
+            }
+        }
 
         if ($downloadExitCode -eq 0) {
             $statusLabel.ForeColor = [System.Drawing.Color]::ForestGreen
