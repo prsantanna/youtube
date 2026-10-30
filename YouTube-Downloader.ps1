@@ -96,6 +96,31 @@ function Confirm-Dependencies {
     return $true
 }
 
+function Get-DownloadHelp {
+    param([string]$Details)
+
+    if ($Details -match 'Sign in to confirm|cookies|bot') {
+        return 'O YouTube solicitou autenticação. Abra o vídeo no navegador para confirmar que ele está disponível e tente novamente. Vídeos restritos podem exigir cookies de uma sessão conectada.'
+    }
+    if ($Details -match 'Video unavailable|Private video|members-only|age-restricted') {
+        return 'O vídeo está indisponível, privado ou possui uma restrição que impede o download.'
+    }
+    if ($Details -match 'Unsupported URL|Invalid URL') {
+        return 'O endereço informado não foi reconhecido como um vídeo válido do YouTube.'
+    }
+    if ($Details -match 'HTTP Error 403|HTTP Error 429|Too Many Requests') {
+        return 'O YouTube recusou temporariamente a conexão. Aguarde alguns minutos, atualize o yt-dlp e tente novamente.'
+    }
+    if ($Details -match 'ffmpeg.*not found|Postprocessing') {
+        return 'O download ocorreu, mas o FFmpeg não conseguiu processar o arquivo. Reinstale ou atualize o FFmpeg.'
+    }
+    if ($Details -match 'Unable to download|Temporary failure|timed out|connection') {
+        return 'Não foi possível acessar o YouTube. Verifique a conexão, VPN, proxy ou firewall e tente novamente.'
+    }
+
+    return 'O yt-dlp não conseguiu concluir a operação. Atualize o programa e tente novamente.'
+}
+
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Baixador de vídeos'
 $form.Size = New-Object System.Drawing.Size(650, 430)
@@ -264,7 +289,7 @@ $downloadButton.Add_Click({
     $form.Refresh()
 
     try {
-        & yt-dlp @arguments
+        $downloadText = (& yt-dlp @arguments 2>&1 | Out-String).Trim()
         $downloadExitCode = $LASTEXITCODE
 
         if ($downloadExitCode -eq 0) {
@@ -274,13 +299,18 @@ $downloadButton.Add_Click({
                 'O arquivo foi baixado com sucesso.', 'Concluído', 'OK', 'Information'
             )
         } else {
-            throw "O yt-dlp terminou com o código $downloadExitCode."
+            $friendlyHelp = Get-DownloadHelp -Details $downloadText
+            $technicalDetails = $downloadText
+            if ($technicalDetails.Length -gt 900) {
+                $technicalDetails = $technicalDetails.Substring($technicalDetails.Length - 900)
+            }
+            throw "$friendlyHelp`n`nDetalhes técnicos:`n$technicalDetails"
         }
     } catch {
         $statusLabel.ForeColor = [System.Drawing.Color]::Firebrick
         $statusLabel.Text = 'Não foi possível concluir o download.'
         [System.Windows.Forms.MessageBox]::Show(
-            "O download falhou.`n`nVerifique o link e a conexão. Confirme também se o FFmpeg está instalado.",
+            "O download falhou.`n`n$($_.Exception.Message)",
             'Falha no download', 'OK', 'Error'
         )
     } finally {
@@ -292,3 +322,4 @@ $downloadButton.Add_Click({
 })
 
 [void]$form.ShowDialog()
+
