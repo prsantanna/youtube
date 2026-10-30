@@ -296,7 +296,8 @@ $downloadButton.Add_Click({
         )
     } else {
         $arguments = @(
-            '--no-playlist', '--newline', '-f', 'bv*+ba/b',
+            '--no-playlist', '--newline',
+            '-f', 'bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             '--merge-output-format', 'mp4', '-o', $outputTemplate, $url
         )
     }
